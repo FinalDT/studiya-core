@@ -10,7 +10,7 @@
 
 > **"학원에, 문제집에, 인강까지 너무 많다고? 한번에 모아줄게!" – Studiya**
 
-<img width="9778" height="5024" alt="최종 프로젝트 구조도_figzam_2" src="" />
+<img width="9778" height="5024" alt="최종 프로젝트 구조도_figzam_2" src="docs/STUDIYA 파이프라인 구조도.jpg" />
 
 
 ## 🏗️ 아키텍처 개요
