@@ -1,0 +1,47 @@
+-- gold.vw_personal_item_enriched source
+
+ALTER   VIEW gold.vw_personal_item_enriched AS
+WITH base AS (      -- 문항=행 (세션/순번 보존된) mapped
+  SELECT *
+  FROM gold.vw_rl_mapped
+),
+win AS (            -- ✅ 윈도우 계산을 '컬럼'으로 먼저 뽑기
+  SELECT
+    b.learnerID, b.grade, b.session_id, b.seq_in_session,
+    b.assessmentItemID, b.knowledgeTag, b.term, b.concept_name, b.chapter_name,
+    b.is_correct, b.ts,
+    -- 개인-태그 집계(윈도우)
+    COUNT(*)  OVER (PARTITION BY b.learnerID, b.session_id, b.knowledgeTag)                              AS tag_attempts,
+    SUM(CASE WHEN b.is_correct=1 THEN 1 ELSE 0 END)
+         OVER (PARTITION BY b.learnerID, b.session_id, b.knowledgeTag)                                   AS tag_correct,
+    AVG(CASE WHEN b.is_correct=1 THEN 1.0 ELSE 0.0 END)
+         OVER (PARTITION BY b.learnerID, b.session_id, b.knowledgeTag)                                   AS tag_accuracy_win,
+    -- 개인-세션 집계(윈도우)
+    COUNT(*)  OVER (PARTITION BY b.learnerID, b.session_id)                                              AS n_items,
+    SUM(CASE WHEN b.is_correct=1 THEN 1 ELSE 0 END)
+         OVER (PARTITION BY b.learnerID, b.session_id)                                                   AS n_correct,
+    AVG(CASE WHEN b.is_correct=1 THEN 1.0 ELSE 0.0 END)
+         OVER (PARTITION BY b.learnerID, b.session_id)                                                   AS accuracy_win
+  FROM base b
+)
+SELECT
+  w.learnerID, w.grade, w.session_id, w.seq_in_session,
+  w.assessmentItemID, w.knowledgeTag, w.term, w.concept_name, w.chapter_name,
+  w.is_correct, w.ts,
+  -- 윈도우 결과 그대로 노출
+  w.tag_attempts, w.tag_correct, w.tag_accuracy_win    AS tag_accuracy,
+  w.n_items, w.n_correct, w.accuracy_win               AS accuracy,
+  -- 글로벌 조인(행수 보존)
+  gp.global_accuracy, gp.difficulty_band, gp.avg_diff, gp.avg_disc, gp.avg_guess,
+  gp.sample_attempts, gp.unique_learners, gp.n_items AS global_n_items, gp.n_tests,
+  -- 개인화 파생(윈도우 '컬럼' 사용: 중첩 금지)
+  CASE
+    WHEN w.tag_accuracy_win < 0.40 THEN N'기초'
+    WHEN w.tag_accuracy_win < 0.70 THEN N'보통'
+    ELSE N'심화'
+  END AS recommended_level,
+  (w.tag_accuracy_win - ISNULL(gp.global_accuracy, 0.0)) AS personal_vs_global_delta
+FROM win w
+LEFT JOIN gold.vw_llm_concept_panel gp
+  ON gp.knowledge_tag = w.knowledgeTag
+ AND gp.grade         = w.grade;
