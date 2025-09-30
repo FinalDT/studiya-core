@@ -1,0 +1,202 @@
+// 0) (선택) 이전 정책/뷰가 이미 있다면 정리
+.delete table item_response_9 policy update
+.drop materialized-view mv_session_summary_9 ifexists
+
+team4_KQL | getschema | project ColumnName, ColumnType
+
+// 컬럼추리기
+.create-or-alter function with (folder='rt', docstring='raw→clean (scoped)')
+fn_rt_clean_from(
+  src:(
+    Timestamp:string,             // team4_KQL에 실제 있는 것만 선언
+    learnerID:string,
+    testID:string,
+    assessmentItemID:string,
+    answerCode:string,
+    learnerProfile:string
+  )
+)
+{
+  src
+  // 1) 원본 이벤트 시간 확보(없으면 ingestion_time() 대체)
+  | extend ts_raw = coalesce(
+      todatetime(Timestamp),
+      todatetime(column_ifexists("timeStamp", datetime(null))),
+      todatetime(column_ifexists("EventProcessedUtcTime", datetime(null))),
+      todatetime(column_ifexists("EventEnqueuedUtcTime", datetime(null))),
+      ingestion_time()
+    )
+  | extend processed_at = todatetime(coalesce(ingestion_time(), now()))
+  // 2) 연/월/일은 오늘(now), 시:분:초는 원본(ts_raw) 유지
+  | extend ts = startofday(now()) + (ts_raw - startofday(ts_raw))
+  | extend learnerID        = tostring(learnerID),
+           testID           = tostring(testID),
+           assessmentItemID = tostring(assessmentItemID),
+           is_correct_raw   = tostring(answerCode)
+  | extend is_correct = toint(case(
+        is_correct_raw in ('1','O','o','true','T','Y','Yes'), 1,
+        is_correct_raw in ('0','X','x','false','F','N','No'), 0,
+        toint(is_correct_raw)
+    ))
+  | extend _p = split(tostring(coalesce(learnerProfile,'')),';')
+  | extend gender = iif(array_length(_p)>=1 and isnotempty(tostring(_p[0])), tostring(_p[0]), ''),
+           school = iif(array_length(_p)>=2 and isnotempty(tostring(_p[1])), tostring(_p[1]), ''),
+           grade  = toint(iif(array_length(_p)>=3, _p[2], ''))
+  | project ts, learnerID, gender, grade, school, testID, assessmentItemID, is_correct, processed_at
+}
+
+
+// 2) 세션화 함수: 반드시 src에서 시작 (신규 인제스트 배치 범위로 자동 제한됨)
+// 세션화 함수(LearnerID+TestID 파티셔닝, N문항 버킷팅)
+// 세션화(N문항 버킷) - 중첩 partition 없이 구현
+// 세션화(N문항 버킷) - floor() 대신 div 사용
+// 세션화(N문항 버킷) - div 사용 + 콤마 추가
+.create-or-alter function with (folder='rt', docstring='sessionize (scoped)')
+fn_rt_sessionized_from(
+  src:(
+    Timestamp:string,
+    learnerID:string, testID:string, assessmentItemID:string,
+    answerCode:string, learnerProfile:string
+  ),
+  bucket_size:int, run_id:string
+)
+{
+  let bsz = iif(bucket_size <= 0, 6, bucket_size);
+  let delivery_mode = strcat("first", tostring(bsz));
+  fn_rt_clean_from(src)
+  | sort by learnerID asc, ts asc, testID asc, assessmentItemID asc
+  | serialize
+  | summarize items = make_list(pack(
+        "ts", ts, "testID", testID, "assessmentItemID", assessmentItemID,
+        "is_correct", is_correct, "gender", gender, "grade", grade, "school", school, "processed_at", processed_at
+      ), 1048576) by learnerID
+  | mv-expand with_itemindex=idx items
+  | extend ts               = todatetime(items.ts),
+           processed_at     = todatetime(items.processed_at),
+           testID           = tostring(items.testID),
+           assessmentItemID = tostring(items.assessmentItemID),
+           is_correct       = toint(items.is_correct),
+           gender           = tostring(items.gender),
+           grade            = toint(items.grade),
+           school           = tostring(items.school),
+           rn               = tolong(idx) + 1
+  | extend session_idx    = tolong((rn - 1) / bsz),
+           seq_in_session = 1 + ((rn - 1) % bsz)
+  | extend session_id     = strcat(run_id, ":", delivery_mode, ":", learnerID, ":", tostring(session_idx))
+  | project ts, session_id, learnerID, gender, grade, school,
+            testID, assessmentItemID, is_correct, seq_in_session, session_idx, processed_at
+}
+
+
+
+
+// 3) 정책에서 호출할 최종 변환 함수 (N=6 고정)
+.create-or-alter function with (folder='rt', docstring='policy transform (scoped)')
+fn_to_item_response_6_from(
+  src:(
+    Timestamp:string,
+    learnerID:string, testID:string, assessmentItemID:string,
+    answerCode:string, learnerProfile:string
+  )
+)
+{
+  let _runid = strcat("rt-", format_datetime(now(), "yyyyMMdd"));
+  fn_rt_sessionized_from(src, 6, _runid)
+  | project ts, session_id, learnerID, testID, assessmentItemID,
+            is_correct = toint(is_correct),
+            seq_in_session, session_idx, grade, gender, school, processed_at
+}
+
+
+
+// (참고) 대시보드용 ad-hoc 함수/뷰를 원하면 team4_KQL을 인자로 넣어 호출해 쓰면 됨.
+// 예: fn_rt_sessionized_from(team4_KQL, 9, 'demo-2025-09-15')
+
+// 4) 대상(골드) 테이블
+.create table item_response_6 (
+  ts:datetime,
+  session_id:string,
+  learnerID:string,
+  testID:string,
+  assessmentItemID:string,
+  is_correct:int,
+  seq_in_session:long,
+  session_idx:long,
+  grade:int,
+  gender:string,
+  school:string,
+  processed_at:datetime
+)
+
+// 5) Update Policy (한 줄 JSON, ASCII 따옴표만 사용)
+// (기존 정책이 있으면 먼저 비우기)
+.alter table item_response_6 policy update '[]'
+
+.alter table item_response_6 policy update
+'[{"IsEnabled":true,"Source":"team4_KQL","Query":"fn_to_item_response_6_from(team4_KQL)","IsTransactional":true,"PropagateIngestionProperties":true}]'
+
+// 6) 세션 요약 Materialized View (대시보드용)
+.create-or-alter materialized-view with (backfill=true)
+mv_session_summary_6
+on table item_response_6
+{
+  item_response_6
+  | summarize
+      n_items       = count(),
+      session_acc   = avg(todouble(is_correct)),
+      session_start = min(ts),
+      session_end   = max(ts)
+    by session_id, learnerID, gender, grade, school
+}
+
+.show table item_response_9 policy update
+team4_KQL | top 5 by ingestion_time() desc | project ingestion_time=ingestion_time(), Timestamp, answerCode
+item_response_9 | top 5 by ts desc
+
+
+
+.drop table mv_session_summary_9 ifexists
+
+// 이 함수가 존재하고(이름 오타 X)
+.show functions
+// 함수 소스 확인(요약 아님, 실제 본문)
+.show function fn_rt_clean_from
+.show function fn_rt_sessionized_from
+.show function fn_to_item_response_6_from
+
+
+
+
+// 세션화된 보관 테이블 건수
+item_response_6
+| count
+
+// 3) 세션 요약 뷰 건수
+mv_session_summary_9
+| count
+
+
+// 정책 잠시 제거
+.alter table item_response_9 policy update '[]'
+
+// (주의) 테이블 내용 삭제 — 운영 환경에선 신중히
+.truncate table item_response_9
+
+// 새 세션화 로직으로 과거 전체 다시 적재
+.set-or-append item_response_9 <|
+fn_to_item_response_9()
+
+// 정책 복원
+.alter table item_response_9 policy update
+'[{"IsEnabled":true,"Source":"team4_KQL","Query":"fn_to_item_response_9()","IsTransactional":true,"PropagateIngestionProperties":true}]'
+
+
+
+
+.show table item_response_6 policy update     // 정책 붙어 있으면 OK
+team4_KQL       | top 100 by ingestion_time() desc
+item_response_6 | top 100 by ingestion_time() desc
+
+.show table item_response_6 policy update     // 정책 붙어 있으면 OK
+team4_KQL       | top 100 by ingestion_time() desc
+item_response_6 | top 100 by ingestion_time() desc
