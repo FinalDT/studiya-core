@@ -1,0 +1,79 @@
+1) master DB에 마스터 키 & 서버 인증서 생성
+
+-- master 사용
+USE master;
+GO
+
+-- (있으면 건너뜀) 마스터 키 생성
+-- 이미 있으면 에러가 나니, 있으면 SKIP 또는 TRY...CATCH로 처리
+CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'Strong!MasterKey_P@ss_2025';
+GO
+
+-- 서버 인증서 생성 (TDE용)
+CREATE CERTIFICATE TDECert_OnPrem
+    WITH SUBJECT = 'TDE Certificate for [on-pre-test]';
+GO
+
+2) 서버 인증서 백업 (개인키 포함, 외부 안전 보관)
+
+-- 백업 폴더 예시: D:\tde\
+BACKUP CERTIFICATE TDECert_OnPrem
+  TO FILE = 'D:\tde\TDECert_OnPrem.cer'
+  WITH PRIVATE KEY
+  (
+     FILE = 'D:\tde\TDECert_OnPrem_PrivateKey.pvk',
+     ENCRYPTION BY PASSWORD = 'Strong!PrivateKey_P@ss_2025'
+  );
+GO
+
+3) 대상 DB([on-premise])에 DEK 생성 (AES-256)
+
+USE [on-pre-test];
+GO
+
+-- 데이터베이스 암호화 키(DEK) 생성, 서버 인증서로 보호
+CREATE DATABASE ENCRYPTION KEY
+    WITH ALGORITHM = AES_256
+    ENCRYPTION BY SERVER CERTIFICATE TDECert_OnPrem;
+GO
+
+4) 암호화 ON
+ALTER DATABASE [on-premise] SET ENCRYPTION ON;
+GO
+
+5) 암호화 상태/진행률 확인 (tempdb 포함)
+-- DB별 암호화 상태/진행률
+SELECT
+    **DB\_NAME(database\_id) AS db\_name,**
+
+    **encryption\_state,              -- 0=Not, 1=Unencrypted, 2=Encryption in progress, 3=Encrypted, 4=Key change in progress, 5=Decryption in progress, 6=Protection change**
+
+    **percent\_complete,**
+
+    **key\_algorithm,**
+
+    **key\_length**
+
+FROM sys.dm_database_encryption_keys
+ORDER BY database_id;
+
+-- 특정 DB만 확인
+SELECT
+    **DB\_NAME(database\_id) AS db\_name,**
+
+    **encryption\_state,**
+
+    **percent\_complete**
+
+FROM sys.dm_database_encryption_keys
+WHERE database_id = DB_ID(N'on-premise');
+
+-- tempdb 암호화 여부는 TDE 사용 DB가 하나라도 있으면 자동 암호화됨
+-- tempdb가 보이면 정상
+
+6) 암호화 후 첫 Full 백업 (백업 체인 새로 시작)
+-- 경로/파일명은 환경에 맞게
+BACKUP DATABASE [on-premise]
+TO DISK = 'D:\backup\on-premise_full_TDE_20250908.bak'
+WITH INIT, COMPRESSION, STATS = 10;
+GO
