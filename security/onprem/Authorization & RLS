@@ -1,0 +1,179 @@
+-- 관리자 역할 
+CREATE ROLE admin_role;
+
+-- 교사 역할 
+CREATE ROLE teacher_role;
+
+-- 학생 역할
+CREATE ROLE student_role;
+
+-- 학부모 역할
+CREATE ROLE parent_role;
+
+
+
+-- 2단계: 기본 권한 부여 (테이블별 SELECT 권한)
+
+-- ================================================================
+
+-- 모든 역할에 기본 SELECT 권한 부여
+GRANT SELECT ON student_info TO admin_role, teacher_role, student_role, parent_role;
+GRANT SELECT ON teacher_info TO admin_role, teacher_role;
+GRANT SELECT ON parent_info TO admin_role, parent_role;
+GRANT SELECT ON counseling_log TO admin_role, teacher_role, parent_role;
+
+-- 관리자: 모든 DML 권한
+GRANT INSERT, UPDATE, DELETE ON student_info TO admin_role;
+GRANT INSERT, UPDATE, DELETE ON teacher_info TO admin_role;
+GRANT INSERT, UPDATE, DELETE ON parent_info TO admin_role;
+GRANT INSERT, UPDATE, DELETE ON counseling_log TO admin_role;
+
+-- 교사: INSERT/UPDATE 권한만 (DELETE 금지)
+GRANT INSERT, UPDATE ON student_info TO teacher_role;
+GRANT INSERT, UPDATE ON counseling_log TO teacher_role;
+
+-- 학생/학부모: SELECT만 (DML 금지)
+-- 이미 위에서 SELECT 권한만 부여됨
+
+-- 3단계: 마스킹 해제 권한 (UNMASK)
+
+-- ================================================================
+
+-- 관리자만 마스킹된 데이터를 원본으로 볼 수 있음
+GRANT UNMASK TO admin_role;
+GO
+
+-- 4단계: 행 수준 보안(RLS) 함수 생성
+
+-- ================================================================
+
+
+
+-- 학생 테이블용 보안 함수
+CREATE OR ALTER FUNCTION fn_student_security_predicate(@student_id AS int)
+RETURNS TABLE
+WITH SCHEMABINDING
+AS
+RETURN
+    SELECT 1 AS fn_student_security_predicate_result
+    WHERE
+        -- 관리자는 모든 데이터 접근 가능
+        IS_ROLEMEMBER('admin_role') = 1
+        OR
+        -- 교사는 자신이 담당하는 반 학생만 접근 가능
+        (IS_ROLEMEMBER('teacher_role') = 1 AND EXISTS (
+            SELECT 1 FROM dbo.teacher_info t
+            INNER JOIN dbo.student_info s ON t.class_id = s.class_code
+            WHERE s.student_id = @student_id
+            AND t.teacher_id = CAST(SESSION_CONTEXT(N'user_id') AS NVARCHAR(10))
+        ))
+        OR
+        -- 학생은 본인 데이터만 접근 가능
+        (IS_ROLEMEMBER('student_role') = 1 AND @student_id = CAST(SESSION_CONTEXT(N'user_id') AS INT))
+        OR
+        -- 학부모는 자녀 데이터만 접근 가능
+        (IS_ROLEMEMBER('parent_role') = 1 AND EXISTS (
+            SELECT 1 FROM dbo.parent_info p
+            WHERE p.student_id = @student_id
+            AND p.parent_id = CAST(SESSION_CONTEXT(N'user_id') AS NVARCHAR(20)) 
+        ));
+GO
+
+
+
+-- 상담 로그용 보안 함수
+CREATE OR ALTER FUNCTION fn_counseling_security_predicate(@student_id AS int)
+RETURNS TABLE
+WITH SCHEMABINDING
+AS
+RETURN
+    SELECT 1 AS fn_counseling_security_predicate_result
+    WHERE
+        -- 관리자는 모든 데이터 접근 가능
+        IS_ROLEMEMBER('admin_role') = 1
+        OR
+        -- 교사는 자신이 담당하는 반 학생의 상담 로그만 접근 가능
+        (IS_ROLEMEMBER('teacher_role') = 1 AND EXISTS (
+            SELECT 1 FROM dbo.teacher_info t
+            INNER JOIN dbo.student_info s ON t.class_id = s.class_code
+            WHERE s.student_id = @student_id
+            AND t.teacher_id = CAST(SESSION_CONTEXT(N'user_id') AS INT)
+        ))
+        OR
+        -- 학부모는 자녀의 상담 로그만 접근 가능
+        (IS_ROLEMEMBER('parent_role') = 1 AND EXISTS (
+            SELECT 1 FROM dbo.parent_info p
+            WHERE p.student_id = @student_id
+            AND p.parent_id = CAST(SESSION_CONTEXT(N'user_id') AS INT)
+        ));
+GO
+
+
+
+-- 4단계: 보안 정책 생성 및 적용
+-- ================================================================
+
+-- 학생 테이블에 행 수준 보안 적용
+CREATE SECURITY POLICY student_security_policy
+ADD FILTER PREDICATE dbo.fn_student_security_predicate(student_id) ON dbo.student_info,
+ADD BLOCK PREDICATE dbo.fn_student_security_predicate(student_id) ON dbo.student_info AFTER INSERT,
+ADD BLOCK PREDICATE dbo.fn_student_security_predicate(student_id) ON dbo.student_info AFTER UPDATE
+WITH (STATE = ON);
+
+-- 상담 로그 테이블에 행 수준 보안 적용
+CREATE SECURITY POLICY counseling_security_policy
+ADD FILTER PREDICATE dbo.fn_counseling_security_predicate(student_id) ON dbo.counseling_log,
+ADD BLOCK PREDICATE dbo.fn_counseling_security_predicate(student_id) ON dbo.counseling_log AFTER INSERT,
+ADD BLOCK PREDICATE dbo.fn_counseling_security_predicate(student_id) ON dbo.counseling_log AFTER UPDATE
+WITH (STATE = ON);
+
+-- 5단계: 테스트용 사용자 생성
+
+-- ================================================================
+
+-- 테스트용 로그인 및 사용자 생성
+CREATE LOGIN admin_user WITH PASSWORD = 'Admin@123!';
+CREATE LOGIN teacher001 WITH PASSWORD = 'Teacher@123!';
+CREATE LOGIN student001 WITH PASSWORD = 'Student@123!';
+CREATE LOGIN parent001 WITH PASSWORD = 'Parent@123!';
+
+CREATE USER admin_user FOR LOGIN admin_user;
+CREATE USER teacher001 FOR LOGIN teacher001;
+CREATE USER student001 FOR LOGIN student001;
+CREATE USER parent001 FOR LOGIN parent001;
+
+-- 역할에 사용자 추가
+ALTER ROLE admin_role ADD MEMBER admin_user;
+ALTER ROLE teacher_role ADD MEMBER teacher001;
+ALTER ROLE student_role ADD MEMBER student001;
+ALTER ROLE parent_role ADD MEMBER parent001;
+
+-- 6단계: 보안 테스트 쿼리
+
+-- ================================================================
+-- 현재 사용자별 접근 권한 테스트
+PRINT '=== 관리자 권한 테스트 ===';
+EXECUTE AS USER = 'admin_user';
+EXEC sp_set_session_context @key = N'user_id', @value = 1; -- admin_user의 id
+SELECT 'Admin View' as user_type, student_id, name, rrn FROM student_info; -- 주민번호 원본 보임
+REVERT;
+
+PRINT '=== 교사 권한 테스트 ===';
+EXECUTE AS USER = 'teacher001';
+EXEC sp_set_session_context @key = N'user_id', @value = '1001'; -- teacher001 담당 반 기준 student_id
+SELECT 'Teacher View' as user_type, student_id, name, rrn FROM student_info; -- 담당 반 학생만, 주민번호 마스킹
+REVERT;
+
+PRINT '=== 학생 권한 테스트 ===';
+EXECUTE AS USER = 'student001';
+EXEC sp_set_session_context @key = N'user_id', @value = '1002'; -- student001의 student_id
+SELECT 'Student View' as user_type, student_id, name, rrn FROM student_info; -- 본인 데이터만, 주민번호 마스킹
+REVERT;
+
+PRINT '=== 학부모 권한 테스트 ===';
+EXECUTE AS USER = 'parent001';
+EXEC sp_set_session_context @key = N'user_id', @value = '1001'; -- 자녀 student_id
+SELECT 'Parent View' as user_type, s.student_id, s.name, s.rrn, c.content
+FROM student_info s
+LEFT JOIN counseling_log c ON s.student_id = c.student_id; -- 자녀 데이터만, 주민번호 마스킹
+REVERT;
