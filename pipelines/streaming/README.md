@@ -61,7 +61,7 @@ AZURE_BLOB_CONN_STR="your_blob_connection_string"
 - 응답 데이터를 **테스트 단위** / **시간 단위(1시간)** 로 묶어 **배치 데이터(batch)** 생성
 - 최소 6개 응답 이상인 경우만 업로드
 - 업로드 경로 예시:
-<img width="750" height="449" alt="image" src="https://github.com/user-attachments/assets/10759cab-2bdb-48d3-8db1-cc8b1b59c83c" />
+<img width="500" height="312" alt="image" src="https://github.com/user-attachments/assets/10759cab-2bdb-48d3-8db1-cc8b1b59c83c" />
 
 
 ---
@@ -76,10 +76,7 @@ Azure Functions의 Timer Trigger를 통해 Event Hub로 전송합니다.
 - 중복 응답 제거 후 Event Hub로 전송
 - Event Hub를 통해 스트리밍 시스템(예: Databricks, Spark Streaming, Kafka 등)과 연계 가능
 
----
-
-## 📦 Requirements
-
+### Requirements
 `requirements.txt`
 
 ```
@@ -92,13 +89,7 @@ azure-identity
 ---
 
 ## Fabric
-<img width="9778" height="5024" alt="Fabric EventStream" src="fabric/패브릭 흐름.png" />
-
-
-
-
-
-
+<img width="1000" height="500" alt="Fabric EventStream" src="fabric/패브릭 작업영역.png" />
 
 ---
 
