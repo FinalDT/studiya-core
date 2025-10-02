@@ -48,12 +48,15 @@ studiya/
 │  └─ README.md
 ├─ pipelines/                # 배치/스트리밍(쿼리·함수·파이프라인)
 │  ├─ batch/
+│  │  ├─ Data Factory/       # Azure DataFactory 작업 이미지
 │  │  └─ sql/                # Silver/Gold DDL/DML, 검증쿼리
 │  └─ streaming/
-│     ├─ function/           # Azure Function (트리거, 포맷터)
-│     └─ fabric/             # Event Stream 설정 내보낸 파일/문서
+│     ├─ local_to_blob/ 
+│     ├─ timmer_trigger/           # Azure Function (트리거)
+│     ├─ fabric/             # Event Stream 설정 내보낸 파일/문서
+│     └─ README.md           
 ├─ models/                   # ML/RAG, 노트북/파이프라인
-│  ├─ notebooks/
+│  ├─ ML/
 │  └─ rag/
 ├─ dashboards/               # Power BI, 리포트
 │  ├─ pbix/                  # LFS 권장
