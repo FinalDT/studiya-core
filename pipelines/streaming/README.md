@@ -5,6 +5,9 @@
 
 - **로컬 데이터 → Azure Blob Storage 업로드 (local_to_blob)**
 - **Azure Function Timer Trigger 기반 데이터 조회 및 Event Hub 전송 (timer_trigger)**
+- **Fabric eventstream**기반 Eventhouse 및 Lakehouse에 전송
+- **Lakehouse**: 원본 데이터 저장
+- **Eventhuose**: KQL기반 처리 후 SQL로 저장
 
 ---
 
@@ -19,6 +22,7 @@ realtime-data-preprocess
 │   ├── function_app.py
 │   ├── requirements.txt       # 필요한 Python 라이브러리
 │   └── local.settings.json
+├── fabric/
 └── README.md
 ```
 
@@ -84,6 +88,17 @@ azure-eventhub
 azure-storage-blob
 azure-identity
 ```
+
+---
+
+## Fabric
+<img width="9778" height="5024" alt="Fabric EventStream" src="fabric/패브릭 흐름.png" />
+
+
+
+
+
+
 
 ---
 
