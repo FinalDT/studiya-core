@@ -1,0 +1,43 @@
+{
+  "version": "v2",
+  "jdbc_url": "jdbc:sqlserver://1dt-team4-sqlserver.database.windows.net:1433;database=1dt-team4-sqldb",
+  "connection_properties": {
+    "user": "azureuser",
+    "password": "team4123!@#",
+    "driver": "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+  },
+  "batch_table": "gold.gold_realscore_pred",
+  "recent_table": "gold.realtime_pred_realscore",
+  "target": "realScore_clean",
+  "exclude_cols": ["learnerID", "testID", "correct_cnt", "items_attempted", "realScore_clean"],
+  "categorical_candidates": ["gender", "grade", "subjectName", "itemType"],
+  "drop_columns": ["_mean"],
+  "merge_extra_data": true,
+  "rename_map": {"pred_realScore_clean": "realScore_clean"},
+  "drop_cols": ["percent_rank", "grade_percentile_calc"],
+  "experiment_name": "/Workspace/Users/1dt003@msacademy.msai.kr/team4_pred_experiment",
+  "model_name": "team4-pred-model",
+  "staging_rmse_threshold": 10.0,
+  "required_columns": {
+    "difficultyLevel": "difficultyLevel_mean",
+    "guessLevel": "guessLevel_mean", 
+    "discriminationLevel": "discriminationLevel_mean"
+  },
+  "default_values": {
+    "age": 0,
+    "subjectName": "unknown",
+    "itemType": "unknown",
+    "answerTime_avg": 0.0,
+    "theta_clean": 0.0,
+    "correctRate": 0.0,
+    "accuracy": 0.0
+  },
+  "feature_engineering": {
+    "create_correctRate_from": ["correct_cnt", "items_attempted"],
+    "create_accuracy_from": "correctRate"
+  },
+  "mlflow_settings": {
+    "tracking_uri": "databricks",
+    "registry_uri": "databricks"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "version": "v1",
+  "jdbc_url": "jdbc:sqlserver://1dt-team4-sqlserver.database.windows.net:1433;database=1dt-team4-sqldb",
+  "connection_properties": {
+    "user": "azureuser",
+    "password": "team4123!@#",
+    "driver": "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+  },
+  "batch_table": "gold.gold_realscore_pred",
+  "recent_table": "",
+  "target": "realScore_clean",
+  "exclude_cols": ["learnerID", "testID", "correct_cnt", "items_attempted"],
+  "categorical_candidates": ["gender", "grade"],
+  "drop_columns": ["_mean"],
+  "merge_extra_data": false,
+  "experiment_name": "/Users/1dt003@msacademy.msai.kr/real_score_experiment",
+  "model_name": "real-score-model",
+  "staging_rmse_threshold": 10.0
+}
