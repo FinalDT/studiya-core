@@ -1,4 +1,4 @@
-# 📘 Team4-databricks
+# 📘 Machine Learning
 
 ## 📌 프로젝트 개요
 - 신규 학습자의 진단 평가 데이터를 기반으로 **이해력 및 진점수(진단 점수) 예측**  
@@ -9,7 +9,8 @@
   - 간단한 데이터 연결, 모델 실험, 예측 테스트 수행  
   - 이후 **Databricks 환경으로 이전** → 본격적인 MLOps 파이프라인 구축  
 - **ML Designer 이미지 예시**
-  <img width="1352" height="1164" alt="image" src="https://github.com/user-attachments/assets/57c5f63d-e9cf-4258-8c04-3f850a175da0" />
+  
+  <img width="700" height="500" alt="image" src="https://github.com/user-attachments/assets/57c5f63d-e9cf-4258-8c04-3f850a175da0" />
 
 ---
 
@@ -53,7 +54,7 @@
   - 시도 횟수 및 성공 횟수, 오류율
   - 엔드포인트 작동 상태 및 요청 처리 속도
   - 버전별 성공횟수 및 오류율
-<img width="1603" height="1210" alt="image" src="https://github.com/user-attachments/assets/adb7cd20-6a0d-40f3-8527-9198444ab711" />
+<img width="800" height="600" alt="image" src="https://github.com/user-attachments/assets/adb7cd20-6a0d-40f3-8527-9198444ab711" />
 
 ## 📡 배포 및 운영
  - CI 실행: Git Push → 테스트/빌드 자동 수행
