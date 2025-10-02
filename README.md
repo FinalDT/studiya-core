@@ -51,8 +51,8 @@ studiya/
 │  │  ├─ Data Factory/       # Azure DataFactory 작업 이미지
 │  │  └─ sql/                # Silver/Gold DDL/DML, 검증쿼리
 │  └─ streaming/
-│     ├─ local_to_blob/ 
-│     ├─ timmer_trigger/           # Azure Function (트리거)
+│     ├─ local_to_blob/      # Blob Storage에 저장
+│     ├─ timmer_trigger/     # Azure Function (트리거)
 │     ├─ fabric/             # Event Stream 설정 내보낸 파일/문서
 │     └─ README.md           
 ├─ models/                   # ML/RAG, 노트북/파이프라인
