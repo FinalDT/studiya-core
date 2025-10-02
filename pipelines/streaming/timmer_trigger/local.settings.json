@@ -1,0 +1,11 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=team4realdata;AccountKey=q4NWKr2ejfzJO6lYr+GcKjjoALKAjhsjeSCZtRbxtwTqIos5xgjpGsuoiFAdQyHmDZ84uUnFLOeK+ASts4nwpw==;EndpointSuffix=core.windows.net",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "EVENT_HUB_CONN_STR": "Endpoint=sb://team4-eventhub.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=36uBZcTfXwamNNa5IjG1+SsGxiDFQqLRh+AEhDB4dy4=",
+    "EVENT_HUB_NAME": "team4-stream",
+    "BLOB_CONTAINER": "processed-data",
+    "AzureWebJobsFeatureFlags": "EnableWorkerIndexing"
+  }
+}
