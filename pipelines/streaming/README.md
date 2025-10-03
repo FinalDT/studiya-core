@@ -91,6 +91,15 @@ azure-identity
 ## Fabric
 <img width="1000" height="500" alt="Fabric EventStream" src="fabric/패브릭 작업영역.png" />
 
+**목적**: **엔드투엔드 일원화**를 위해 수집부터 정제 및 서빙까지 진행합니다.
+
+- 흐름 : Event Hub -> EventStream(Activator 알림) -> LakeHouse(브론즈) -> EventHouse(KQL DB) -> KQL Query(실버) -> Materialized View(골드) -> Data Pipeline(Teams 웹훅) -> SQL Server
+- **브론즈** : LakeHouse (원본 그대로 적재, 백업/재현성 목적)
+- **실버** : KQL DB (정제함수 생성, 컬럼 추출 및 세션화)
+- **골드** : Materialized View (정제된 테이블 뷰로 생성, 지연/비용 감소)
+- Data Pipeline : 주 운영소 SQL Database로 싱크 후 전송 (Teams 웹훅, 일관성 확인)
+
+- 트러블 슈팅 : Fabric 작업영역 내에 팀원들 추가 시, 등록된 서버 접근 불가 -> 설정에서 연결된 서버에 직접 팀원 추가
 ---
 
 ## 📝 요약
