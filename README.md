@@ -47,6 +47,11 @@ studiya/
 ├─ docs/                     # 아키텍처, 발표자료, 다이어그램
 ├─ data/                     # 샘플 데이터(비식별, 소량)
 │  └─ README.md
+├─ Azure ML/                    # Azure ML(Designer/Job/Model/Endpoint) 관련 산출물
+│  ├─ jobs/                     # Job 실행 캡처/로그 요약/실험 기록
+│  ├─ pipelines/                # Designer 파이프라인(학습/평가/스코어링) 캡처/설명
+│  ├─ models/                   # 모델 아티팩트(score.py, conda_env.yaml 등) 캡처/설명
+│  └─ endpoints/                # Endpoint/Deployment 설정 및 운영 캡처/설명
 ├─ pipelines/                # 배치/스트리밍(쿼리·함수·파이프라인)
 │  ├─ batch/
 │  │  ├─ Data Factory/       # Azure DataFactory 작업 이미지
