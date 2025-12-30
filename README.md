@@ -21,7 +21,9 @@
     ↓
 🧠 데이터 분석 (Azure ML, Databricks, Open AI) 
     ↓
-📊 Power BI 대시보드 연결 및 시각화 (PowerBI, Next.js)
+📊 Power BI 대시보드 연결 및 시각화 (PowerBI)
+
+🌐 웹 제작(Next.js)
 ```
 
 ## 🛠️ 기술 스택
