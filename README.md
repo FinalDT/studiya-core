@@ -80,7 +80,7 @@ studiya/
 | 김진우   | Data Engineer   |  데이터 프로세스 개발, 프로젝트 관리, 시각화 구현           |
 | 서창범    | Data Engineer         |  데이터 프로세스 개발, AI 연동             |
 | 이재훈    | Data Engineer    |   데이터 프로세스 개발, AI 연동, 프론트 개발                 |
-| 정민철    | Data Engineer         |  데이터 프로세스 개발, ML 분석          |
+| 정민철    | Data Engineer         |  데이터 프로세스 개발, ML 분석, 시각화 구현 보조          |
 
 
 ## 📈 결과 요약
