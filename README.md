@@ -78,7 +78,7 @@ studiya/
 | 이름 | 역할            | 담당 업무                                  |
 |------|-----------------|--------------------------------------------|
 | 김동현   | Data Engineer  |  데이터 프로세스 개발, ML 개발  |
-| 김진우   | Data Engineer, Data Analyst   |  데이터 프로세스 개발, 프로젝트 관리, 시각화 구현           |
+| 김진우   | PM, Data Analyst   |  데이터 프로세스 개발, 프로젝트 관리, 시각화 구현           |
 | 서창범    | Data Engineer         |  데이터 프로세스 개발, AI 연동             |
 | 이재훈    | Data Engineer    |   데이터 프로세스 개발, AI 연동, 프론트 개발                 |
 | 정민철    | Data Engineer, Data Analyst    |  데이터 프로세스 개발, ML 개발, 시각화 구현 보조          |
