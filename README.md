@@ -36,6 +36,7 @@
 | 시각화         | Power BI                                       |
 | 웹 제작        | Next.js                                         |
 | AI 연동        | Azure AI Foundary, Open AI                               |
+| 모델 개발      | Azure ML                               |
 | 버전관리 | Git + GitHub |
 
 ## 📁 디렉토리 구조
