@@ -34,9 +34,9 @@
 | 데이터 수집     | Python, Azure Functions, Event Hub, Fabric  |
 | 데이터 처리     | Python, Databricks, Azure Data Factory, Fabric(KQL Query), SSMS, SQL Query             |
 | 저장 및 분산처리 | Databricks, Azure Data Factory, Fabric, SQL Database               |
-| 시각화         | Power BI, Next.js                                       |
+| 시각화         | Power BI                                       |
+| 웹 제작        | Next.js                                         |
 | AI 연동        | Azure AI Foundary, Open AI                               |
-| 버전관리       | Git + GitHub                                   |
 
 ## 📁 디렉토리 구조
 ``` bash
