@@ -19,7 +19,7 @@
     ↓
 💾 데이터 저장소 (Azure SQL Database, Lakehouse)
     ↓
-🧠 데이터 분석 (Azure ML, Databricks, Open AI) 
+🧠 데이터 분석/ML (Azure ML, Databricks, Open AI) 
     ↓
 📊 Power BI 대시보드 연결 및 시각화 (PowerBI)
     ↓
