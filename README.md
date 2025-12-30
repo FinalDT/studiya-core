@@ -3,10 +3,7 @@
 
 **Studiya**는 진단 기반 맞춤형 학습 관리 플랫폼을 목표로 구현한 서비스로, 온프레미스와 클라우드를 사용하는 하이브리드 환경에서 Azure 서비스들을 이용하여 **정적/실시간 데이터**를 엔지니어링 하는 **엔드-투-엔드 데이터 응용 프로그램**을 구현하는 프로젝트입니다.
 
-이 프로젝트의 목표는, 팀원이 직접 온프레미스 환경부터 마이그레이션을 통한 클라우드 운영과 동시에, 
-
-**Python, SQL, Power BI, Databricks, Azure Data Factory, Azure Functions, Fabric, Azure ML, Open AI, Power BI**에 대한 실전 경험을 쌓는 것입니다.
-
+이 프로젝트의 목표는, 팀원이 직접 온프레미스 환경부터 마이그레이션을 통한 클라우드 운영과 동시에 **Python, SQL, Power BI, Databricks, Azure Data Factory, Azure Functions, Fabric, Azure ML, Open AI, Power BI**에 대한 실전 경험을 쌓는 것입니다.
 
 > **"학원에, 문제집에, 인강까지 너무 많다고? 한번에 모아줄게!" – Studiya**
 
