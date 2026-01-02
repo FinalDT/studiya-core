@@ -1,6 +1,6 @@
 # Uncomment to enable Azure Monitor OpenTelemetry
 # Ref: aka.ms/functions-azure-monitor-python
-# azure-monitor-opentelemet
+# azure-monitor-opentelemeter
 
 azure-functions
 azure-eventhub
