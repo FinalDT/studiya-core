@@ -1,3 +1,5 @@
+<img width="1000" height="500" alt="Fabric EventStream" src="fabric/패브릭 작업영역.png" />
+
 # 📡 실시간 데이터 처리 파이프라인
 
 이 레포지토리는 **AI Hub - 수학분야 학습자 역량 측정 Validation 데이터셋**을 활용하여  
