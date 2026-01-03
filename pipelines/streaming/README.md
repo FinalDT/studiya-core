@@ -1,13 +1,21 @@
 # 📡 실시간 데이터 처리 파이프라인
 
-이 레포지토리는 **AI Hub - 수학분야 학습자 역량 측정 Validation 데이터셋**을 활용하여  
-**배치 데이터(Batch Data)를 실시간 데이터로 가정**하고, 다음과 같은 **실시간 데이터 처리 파이프라인**을 구성합니다.
+실시간 데이터가 필요했지만 원천이 없어, **수학 학습자 역량 Validation 데이터셋을 배치로 준비한 뒤 트리거로 매시간 유입되도록 시뮬레이션**했습니다. 이를 **실시간 스트림**으로 간주해 아래 실시간 처리 파이프라인을 구성했습니다.
 
-- **로컬 데이터 → Azure Blob Storage 업로드 (local_to_blob)**
-- **Azure Function Timer Trigger 기반 데이터 조회 및 Event Hub 전송 (timer_trigger)**
-- **Fabric eventstream**기반 Eventhouse 및 Lakehouse에 전송
-- **Lakehouse**: 원본 데이터 저장
-- **Eventhuose**: KQL기반 처리 후 SQL로 저장
+1) **데이터 준비(입력 생성)**  
+- 로컬 JSON 데이터를 전처리한 뒤 **Azure Blob Storage에 업로드**합니다.
+
+2) **실시간 시뮬레이션(스트리밍 송신)**  
+- Azure Functions **Timer Trigger**가 Blob에서 최근 배치 데이터를 주기적으로 조회해  
+  **Event Hub로 전송**함으로써 “실시간 이벤트”처럼 흐르게 합니다.
+
+3) **Fabric 수집 및 저장(원본 + 실시간 분석 분기)**  
+- Fabric **Eventstream**이 Event Hub 이벤트를 수신해  
+  **Lakehouse(원본 백업)**와 **Eventhouse(KQL DB, 실시간 분석)**로 **동시에 적재**합니다.
+
+4) **정제 및 운영 연동(결과 서빙)**  
+- Eventhouse에서 **KQL로 정제/집계**한 결과를 만들고,  
+  최종 결과를 **운영 SQL DB에 저장/동기화**하여 서비스/리포트에서 활용합니다.
 
 ---
 
@@ -88,23 +96,24 @@ azure-identity
 
 ---
 
+
 ## Fabric
+
 <img width="1000" height="500" alt="Fabric EventStream" src="fabric/패브릭 작업영역.png" />
 
-**목적**: **엔드투엔드 일원화**를 위해 수집부터 정제 및 서빙까지 진행합니다.
+**역할**: Event Hub 이후 구간에서 **저장·정제·서빙·운영 연동(알림)**까지를 Fabric에서 엔드투엔드로 처리합니다.
 
-- 흐름 : Event Hub -> EventStream(Activator 알림) -> LakeHouse(브론즈) -> EventHouse(KQL DB) -> KQL Query(실버) -> Materialized View(골드) -> Data Pipeline(Teams 웹훅) -> SQL Server
-- **브론즈** : LakeHouse (원본 그대로 적재, 백업/재현성 목적)
-- **실버** : KQL DB (정제함수 생성, 컬럼 추출 및 세션화)
-- **골드** : Materialized View (정제된 테이블 뷰로 생성, 지연/비용 감소)
-- Data Pipeline : 주 운영소 SQL Database로 싱크 후 전송 (Teams 웹훅, 일관성 확인)
+- **흐름**: Event Hub → Eventstream(옵션: Activator 알림) → **Lakehouse(Bronze)** + **Eventhouse(KQL DB)** → **KQL 정제(Silver)** → **Materialized View(Gold)** → **Data Pipeline(운영 SQL DB 동기화 + Teams 알림/검증)**
 
-- 트러블 슈팅 : Fabric 작업영역 내에 팀원들 추가 시, 등록된 서버 접근 불가 -> 설정에서 연결된 서버에 직접 팀원 추가
+- **Bronze (Lakehouse)**: 이벤트 **원본 그대로 적재**(백업/재현성, 재처리 가능)
+- **Silver (Eventhouse + KQL)**: 컬럼 추출·정합성 정리·세션화 등 **실시간 정제/집계**
+- **Gold (Materialized View)**: 자주 조회하는 결과를 **사전계산**해 서빙 지연/비용 감소
+- **운영 연동(Data Pipeline)**: Gold 결과를 **운영 SQL DB로 동기화**, 전후 검증 후 Teams Webhook으로 결과 알림
 ---
-
 ## 📝 요약
 
-- **배치 데이터를 실시간 데이터로 가정**하여 **실시간 데이터 처리 파이프라인**을 구성
-- `local_to_blob`: 로컬 데이터 → Blob Storage 업로드
-- `timer_trigger`: Timer Trigger로 이전 시간대 데이터 조회 → Event Hub 전송
-- 이를 통해 **실시간 학습 데이터 파이프라인**을 시뮬레이션할 수 있음
+- 실시간 원천 데이터 부재 상황에서 Validation 배치 데이터 기반 실시간 스트림 시뮬레이션 수행함  
+- Local → Blob(`local_to_blob`) → Functions Timer Trigger(`timer_trigger`) → Event Hub 순의 이벤트 생성 및 전송 구성함  
+- Fabric(Eventstream → Lakehouse(Bronze) + Eventhouse(KQL DB) → KQL(Silver) → MV(Gold)) 구간에서 원본 보관 및 실시간 정제 수행함  
+- Data Pipeline 기반 운영 SQL DB 동기화 및 Teams Webhook 기반 검증·알림 자동화 적용함  
+
