@@ -3,7 +3,7 @@
 실시간 데이터가 필요했지만 원천이 없어, **수학 학습자 역량 Validation 데이터셋을 배치로 준비한 뒤 트리거로 매시간 유입되도록 시뮬레이션**했습니다. 이를 **실시간 스트림**으로 간주해 아래 실시간 처리 파이프라인을 구성했습니다.
 
 1) **데이터 준비(입력 생성)**  
-- 로컬 JSON 데이터를 전처리한 뒤 **Azure Blob Storage에 업로드**
+- 로컬 JSON 데이터를 전처리한 뒤 **Azure Blob Storage(Blob)에 업로드**
 
 2) **실시간 시뮬레이션(스트리밍 송신)**  
 - Azure Functions **Timer Trigger**가 Blob에서 최근 배치 데이터를 주기적으로 조회해  
@@ -116,7 +116,7 @@ azure-identity
 ## 📝 요약
 
 - 실시간 원천 데이터 부재 상황에서 Validation 배치 데이터 기반 실시간 스트림 시뮬레이션 수행함  
-- Local → Blob(`local_to_blob`) → Functions Timer Trigger(`timer_trigger`) → Event Hub 순의 이벤트 생성 및 전송 구성함  
+- Local → Blob → Functions Timer Trigger → Event Hub 순의 이벤트 생성 및 전송 구성함  
 - Fabric(Eventstream → Lakehouse(Bronze) + Eventhouse(KQL DB) → KQL(Silver) → MV(Gold)) 구간에서 원본 보관 및 실시간 정제 수행함  
 - Data Pipeline 기반 운영 SQL DB 동기화 및 Teams Webhook 기반 검증·알림 자동화 적용함  
 
