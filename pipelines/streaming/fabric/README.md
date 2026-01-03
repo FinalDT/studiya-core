@@ -1,7 +1,8 @@
 ## 🧩 Fabric 파이프라인 (Eventstream → Lakehouse/Eventhouse(KQL DB) → MV → 운영 DB)
 
 
-<img width="1000" height="500" alt="Fabric EventStream" src="fabric/패브릭 작업영역.png" />
+<img width="1442" height="756" alt="image" src="https://github.com/user-attachments/assets/ac075dd4-9877-4ad7-a1ea-a6ea2a618a88" />
+
 
 ### 0) Fabric 파트는 어디에 붙어있나?
 이 레포에서 **Event Hub까지**는 “실시간처럼 보이게 만드는 입력(시뮬레이션)” 구간이고,  
