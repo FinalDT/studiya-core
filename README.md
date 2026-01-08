@@ -36,7 +36,7 @@
 | 시각화         | Power BI                                       |
 | 웹 제작        | Next.js                                         |
 | AI 연동        | Azure AI Foundary, Open AI                               |
-| 모델 개발      | Azure ML                               |
+| 모델 개발      | Azure ML                             |
 | 버전관리 | Git + GitHub |
 
 ## 📁 디렉토리 구조
@@ -82,11 +82,11 @@ studiya/
 
 | 이름 | 역할            | 담당 업무                                  |
 |------|-----------------|--------------------------------------------|
-| 김동현   | Data Engineer  |  데이터 프로세스 개발, ML 개발  |
-| 김진우   | PM, Data Analyst   |  데이터 프로세스 개발, 프로젝트 관리, 시각화 구현           |
-| 서창범    | Data Engineer         |  데이터 프로세스 개발, AI 연동             |
-| 이재훈    | Data Engineer    |   데이터 프로세스 개발, AI 연동, 프론트 개발                 |
-| 정민철    | Data Engineer, Data Analyst    |  데이터 프로세스 개발, ML 개발, 시각화 구현 보조          |
+| 김동현   | Data Engineer  | 파이프라인 설계 및 구축, ML 개발  |
+| 김진우   | PM, Data Analyst   |  파이프라인 설계 및 구축, 프로젝트 관리, 시각화 구현           |
+| 서창범    | Data Engineer         |  파이프라인 설계 및 구축, AI 연동             |
+| 이재훈    | Data Engineer    |   파이프라인 설계 및 구축, AI 연동, 프론트 개발                 |
+| 정민철    | Data Engineer, Data Analyst    |  파이프라인 설계 및 구축, ML 개발, 시각화 구현          |
 
 
 ## 📈 결과 요약
