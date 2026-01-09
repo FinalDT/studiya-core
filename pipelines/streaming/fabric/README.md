@@ -24,7 +24,7 @@
 ---
 
 ### 2) Fabric 전체 흐름
-**Event Hub** → **Eventstream** *(필요 시 Activator로 알림 트리거)* → **Lakehouse(원본 백업)** + **Eventhouse(KQL DB, 실시간 분석)** 
+**Event Hub** → **Eventstream** → **Lakehouse(Bronze, 원본 백업)** + **Eventhouse(KQL DB, 실시간 분석)** 
 → **KQL 정제/집계(Silver)** → **Materialized View(Gold, 서빙 최적화)** → **Data Pipeline(운영 SQL DB 동기화 + Teams 알림 + 일관성 체크)**
 
 ---
@@ -37,7 +37,7 @@
 - **Eventhouse = 실시간 분석(속도)**  
   - 운영 지표/이상징후를 빠르게 보기 위해 **조회/집계**에 최적화
 
-즉, **원본 보관(안정성)**과 **실시간 분석(속도)**를 동시에 확보하는 설계입니다.
+즉, 원본 보관(안정성)과 실시간 분석(속도)를 동시에 확보하는 설계입니다.
 
 ---
 
@@ -65,7 +65,7 @@
 Fabric 내부의 Gold(MV) 결과를 **운영 SQL Database로 동기화**하고, 운영자가 신뢰할 수 있도록 다음을 포함합니다.
 
 - **동기화 전후 검증(예: 행 수 조회)**  
-  - Copy 전 기준값 조회 → Copy 후 결과 조회로 이상 여부 확인
+  - 적재 전 기준값 조회 → 적재 후 결과 조회로 이상 여부 확인
 - **Teams Webhook 알림**  
   - 성공/실패 또는 증분 결과를 운영 채널로 전송
 - **목표**: “복사만 하는 파이프라인”이 아니라 **검증 + 알림을 포함한 운영 자동화**
@@ -73,6 +73,6 @@ Fabric 내부의 Gold(MV) 결과를 **운영 SQL Database로 동기화**하고, 
 ---
 
 ### ✅ 요약
-1) Event Hub로 들어온 이벤트를 Eventstream이 받아 **Lakehouse(원본)**와 **Eventhouse(실시간 분석)**로 보냅니다.  
-2) Eventhouse에서는 KQL로 정제(Silver)하고, 자주 쓰는 결과는 MV(Gold)로 빠르게 제공합니다.  
-3) 최종 결과는 Data Pipeline으로 운영 SQL DB에 동기화하고, 검증 후 Teams로 알립니다.
+1) Event Hub로 들어온 이벤트를 Eventstream이 받아 Lakehouse(원본)와 Eventhouse(실시간 분석)로 보냅니다.  
+2) Eventhouse에서는 KQL로 정제(Silver)하고 자주 쓰는 결과는 MV(Gold)로 빠르게 제공합니다.  
+3) 최종 결과는 Data Pipeline으로 운영 SQL DB에 동기화하고 검증 후 Teams로 알립니다.
